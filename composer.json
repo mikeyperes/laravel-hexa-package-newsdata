@@ -1,6 +1,6 @@
 {
     "name": "hexawebsystems/laravel-hexa-package-newsdata",
-    "description": "NewsData.io article/news API integration for the Hexa Core framework.",
+    "description": "NewsData.io — news API integration for article search, headline fetching, and content sourcing.",
     "type": "library",
     "license": "proprietary",
     "require": {
