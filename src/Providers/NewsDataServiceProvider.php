@@ -9,7 +9,7 @@ class NewsDataServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
-        ->mergeConfigFrom(__DIR__ . '/../../config/newsdata.php', 'newsdata');
+        $this->mergeConfigFrom(__DIR__ . '/../../config/newsdata.php', 'newsdata');
         $this->app->singleton(NewsDataService::class);
     }
 
