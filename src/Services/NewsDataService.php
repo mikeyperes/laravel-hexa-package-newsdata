@@ -89,8 +89,11 @@ class NewsDataService
                     'published_at' => $a['pubDate'] ?? null,
                     'source_name' => $a['source_name'] ?? $a['source_id'] ?? '',
                     'source_url' => $a['source_url'] ?? '',
+                    'author' => is_array($a['creator'] ?? null) ? implode(', ', $a['creator']) : ($a['creator'] ?? null),
                     'categories' => $a['category'] ?? [],
                     'keywords' => $a['keywords'] ?? [],
+                    'language' => $a['language'] ?? null,
+                    'country' => is_array($a['country'] ?? null) ? implode(', ', $a['country']) : ($a['country'] ?? null),
                 ])->toArray();
 
                 return [
