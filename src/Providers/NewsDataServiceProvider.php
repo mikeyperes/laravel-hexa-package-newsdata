@@ -4,6 +4,7 @@ namespace hexa_package_newsdata\Providers;
 
 use Illuminate\Support\ServiceProvider;
 use hexa_package_newsdata\Services\NewsDataService;
+use hexa_core\Services\PackageRegistryService;
 
 /**
  * NewsDataServiceProvider — registers NewsData package services, routes, views.
@@ -30,21 +31,24 @@ class NewsDataServiceProvider extends ServiceProvider
     {
         $this->loadRoutesFrom(__DIR__ . '/../../routes/newsdata.php');
         $this->loadViewsFrom(__DIR__ . '/../../resources/views', 'newsdata');
-        $this->registerSidebarItems();
+
+        // Sidebar links — registered via PackageRegistryService with auto permission checks
+        if (!config('hexa.app_controls_sidebar', false)) {
+            $registry = app(PackageRegistryService::class);
+            $registry->registerSidebarLink('newsdata.index', 'NewsData', 'M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z', 'Sandbox', 'newsdata', 82);
+        }
+
+        // Settings card on /settings page
+        $this->registerSettingsCard();
     }
 
     /**
-     * Push sidebar menu items and settings card into core layout stacks.
+     * Register settings card on the core settings page.
      *
      * @return void
      */
-    private function registerSidebarItems(): void
+    private function registerSettingsCard(): void
     {
-        view()->composer('layouts.app', function ($view) {
-            if (config('hexa.app_controls_sidebar', false)) return;
-            $view->getFactory()->startPush('sidebar-sandbox', view('newsdata::partials.sidebar-menu')->render());
-        });
-
         view()->composer('settings.index', function ($view) {
             $view->getFactory()->startPush('settings-cards', view('newsdata::partials.settings-card')->render());
         });
