@@ -35,6 +35,11 @@ class NewsDataServiceProvider extends ServiceProvider
         // Sidebar links — registered via PackageRegistryService with auto permission checks
         if (!config('hexa.app_controls_sidebar', false)) {
             $registry = app(PackageRegistryService::class);
+            // HWS-SIDEBAR-MENU-3L-BEGIN
+            $registry->registerDomainGroup('Discovery', 'M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z', 20);
+            $registry->registerSectionGroup('Sandbox', 'Discovery', '', 20);
+            // HWS-SIDEBAR-MENU-3L-END
+
             $registry->registerSidebarLink('newsdata.index', 'NewsData', 'M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z', 'Sandbox', 'newsdata', 82);
         }
 
