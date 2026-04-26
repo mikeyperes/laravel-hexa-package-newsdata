@@ -4,7 +4,7 @@
 @endonce
 
 <a href="{{ route('newsdata.index') }}"
-   class="flex items-center px-3 py-2 rounded-lg text-sm pl-6 {{ request()->is('raw-newsdata*') ? 'sidebar-active' : 'sidebar-hover' }}">
+   class="flex items-center px-3 py-2 rounded-lg text-sm pl-6 {{ request()->is('newsdata*') || request()->is('raw-newsdata*') ? 'sidebar-active' : 'sidebar-hover' }}">
     NewsData
 </a>
 @endif
