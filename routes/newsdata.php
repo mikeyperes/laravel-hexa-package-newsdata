@@ -11,7 +11,8 @@ use Illuminate\Support\Facades\Route;
 
 Route::middleware(['web', 'auth', 'locked', 'system_lock', 'two_factor', 'role'])->group(function () {
     // Raw dev view
-    Route::get('/raw-newsdata', [NewsDataController::class, 'raw'])->name('newsdata.index');
+    Route::get('/newsdata', [NewsDataController::class, 'raw'])->name('newsdata.index');
+    Route::get('/raw-newsdata', [NewsDataController::class, 'raw'])->name('newsdata.raw');
 
     // Settings
     Route::get('/settings/newsdata', [NewsDataController::class, 'settings'])->name('settings.newsdata');
