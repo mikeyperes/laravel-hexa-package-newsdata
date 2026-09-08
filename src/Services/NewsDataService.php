@@ -2,15 +2,24 @@
 
 namespace hexa_package_newsdata\Services;
 
-use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Log;
 use hexa_core\Models\Setting;
+use hexa_core\Security\Http\OutboundHttpResponse;
+use hexa_core\Security\Http\SafeOutboundHttpClient;
+use Illuminate\Support\Facades\Log;
 
 class NewsDataService
 {
-    /**
-     * @return string|null
-     */
+    public function __construct(private readonly ?SafeOutboundHttpClient $http = null) {}
+
+    private function request(string $endpoint, array $query, int $timeout = 15): OutboundHttpResponse
+    {
+        return ($this->http ?? app(SafeOutboundHttpClient::class))->request(
+            'GET',
+            'https://newsdata.io/api/1/'.$endpoint.'?'.http_build_query($query, '', '&', PHP_QUERY_RFC3986),
+            ['timeout' => $timeout, 'max_bytes' => 4 * 1024 * 1024, 'max_redirects' => 0],
+        );
+    }
+
     private function getApiKey(): ?string
     {
         return Setting::getValue('newsdata_api_key');
@@ -19,67 +28,69 @@ class NewsDataService
     /**
      * Test the API key.
      *
-     * @param string|null $apiKey Override key to test.
+     * @param  string|null  $apiKey  Override key to test.
      * @return array{success: bool, message: string}
      */
     public function testApiKey(?string $apiKey = null): array
     {
         $key = $apiKey ?? $this->getApiKey();
-        if (!$key) {
+        if (! $key) {
             return ['success' => false, 'message' => 'No NewsData API key configured.'];
         }
 
         try {
-            $response = Http::timeout(10)
-                ->get('https://newsdata.io/api/1/latest', [
-                    'apikey' => $key,
-                    'language' => 'en',
-                    'size' => 1,
-                ]);
+            $response = $this->request('latest', [
+                'apikey' => $key,
+                'language' => 'en',
+                'size' => 1,
+            ], 10);
 
             if ($response->successful()) {
                 $data = $response->json();
                 if (($data['status'] ?? '') === 'success') {
                     return ['success' => true, 'message' => 'NewsData API key is valid.'];
                 }
+
                 return ['success' => false, 'message' => 'NewsData returned unexpected response.'];
             }
-            if ($response->status() === 401) {
+            if ($response->status === 401) {
                 return ['success' => false, 'message' => 'Invalid API key.'];
             }
-            return ['success' => false, 'message' => "NewsData returned HTTP {$response->status()}."];
-        } catch (\Exception $e) {
-            return ['success' => false, 'message' => 'Error: ' . $e->getMessage()];
+
+            return ['success' => false, 'message' => "NewsData returned HTTP {$response->status}."];
+        } catch (\Throwable) {
+            return ['success' => false, 'message' => 'NewsData could not be reached securely.'];
         }
     }
 
     /**
      * Search for articles.
      *
-     * @param string $query
-     * @param int $size Results per request (max 50).
-     * @param string $language Language code.
+     * @param  int  $size  Results per request (max 50).
+     * @param  string  $language  Language code.
      * @return array{success: bool, message: string, data: array|null}
      */
     public function searchArticles(string $query, int $size = 10, string $language = 'en'): array
     {
         $key = $this->getApiKey();
-        if (!$key) {
+        if (! $key) {
             return ['success' => false, 'message' => 'No NewsData API key configured.', 'data' => null];
         }
 
         try {
-            $response = Http::timeout(15)
-                ->get('https://newsdata.io/api/1/news', [
-                    'apikey' => $key,
-                    'q' => $query,
-                    'language' => $language,
-                    'size' => min($size, 50),
-                ]);
+            $response = $this->request('news', [
+                'apikey' => $key,
+                'q' => $query,
+                'language' => $language,
+                'size' => max(1, min($size, 50)),
+            ]);
 
             if ($response->successful()) {
                 $data = $response->json();
-                $articles = collect($data['results'] ?? [])->map(fn($a) => [
+                if (! is_array($data) || ($data['status'] ?? '') !== 'success' || ! is_array($data['results'] ?? null)) {
+                    return ['success' => false, 'message' => 'NewsData returned an invalid article response.', 'data' => null];
+                }
+                $articles = collect($data['results'])->filter(static fn ($article): bool => is_array($article))->take(max(1, min($size, 50)))->map(fn ($a) => [
                     'source_api' => 'newsdata',
                     'title' => $a['title'] ?? '',
                     'description' => $a['description'] ?? '',
@@ -94,19 +105,20 @@ class NewsDataService
                     'keywords' => $a['keywords'] ?? [],
                     'language' => $a['language'] ?? null,
                     'country' => is_array($a['country'] ?? null) ? implode(', ', $a['country']) : ($a['country'] ?? null),
-                ])->toArray();
+                ])->values()->toArray();
 
                 return [
                     'success' => true,
-                    'message' => count($articles) . ' articles found.',
+                    'message' => count($articles).' articles found.',
                     'data' => ['articles' => $articles, 'total' => $data['totalResults'] ?? count($articles)],
                 ];
             }
 
-            return ['success' => false, 'message' => "NewsData returned HTTP {$response->status()}.", 'data' => null];
-        } catch (\Exception $e) {
-            Log::error('NewsDataService::searchArticles error', ['query' => $query, 'error' => $e->getMessage()]);
-            return ['success' => false, 'message' => 'Error: ' . $e->getMessage(), 'data' => null];
+            return ['success' => false, 'message' => "NewsData returned HTTP {$response->status}.", 'data' => null];
+        } catch (\Throwable) {
+            Log::warning('NewsData article request failed securely.');
+
+            return ['success' => false, 'message' => 'NewsData could not be reached securely.', 'data' => null];
         }
     }
 }
