@@ -68,22 +68,34 @@ class NewsDataService
      *
      * @param  int  $size  Results per request (max 50).
      * @param  string  $language  Language code.
+     * @param  string|null  $country  Comma separated ISO country codes. Falls back
+     *                                to the configured default. Without one the
+     *                                API returns worldwide results, which buries
+     *                                a country-focused publication in coverage
+     *                                from unrelated markets.
      * @return array{success: bool, message: string, data: array|null}
      */
-    public function searchArticles(string $query, int $size = 10, string $language = 'en'): array
+    public function searchArticles(string $query, int $size = 10, string $language = 'en', ?string $country = null): array
     {
         $key = $this->getApiKey();
         if (! $key) {
             return ['success' => false, 'message' => 'No NewsData API key configured.', 'data' => null];
         }
 
+        $country = trim((string) ($country ?? config('newsdata.default_country', '')));
+
         try {
-            $response = $this->request('news', [
+            $params = [
                 'apikey' => $key,
                 'q' => $query,
                 'language' => $language,
                 'size' => max(1, min($size, 50)),
-            ]);
+            ];
+            if ($country !== '') {
+                $params['country'] = $country;
+            }
+
+            $response = $this->request('news', $params);
 
             if ($response->successful()) {
                 $data = $response->json();
