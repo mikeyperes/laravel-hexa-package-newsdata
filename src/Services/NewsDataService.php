@@ -89,7 +89,9 @@ class NewsDataService
                 'apikey' => $key,
                 'q' => $query,
                 'language' => $language,
-                'size' => max(1, min($size, 50)),
+                // The account plan caps page size and rejects anything larger
+                // with HTTP 422, so clamp rather than fail the whole query.
+                'size' => max(1, min($size, (int) config('newsdata.max_page_size', 10))),
             ];
             if ($country !== '') {
                 $params['country'] = $country;

@@ -16,4 +16,18 @@ return [
 
     'default_country' => env('NEWSDATA_DEFAULT_COUNTRY', 'us,gb,ca,au'),
 
+
+    /*
+    |--------------------------------------------------------------------------
+    | Maximum page size
+    |--------------------------------------------------------------------------
+    |
+    | Largest `size` the account plan accepts. NewsData rejects a larger value
+    | with HTTP 422 rather than clamping, which fails the entire query. Raise
+    | this only alongside a plan that supports it.
+    |
+    */
+
+    'max_page_size' => env('NEWSDATA_MAX_PAGE_SIZE', 10),
+
 ];
