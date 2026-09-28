@@ -2,7 +2,6 @@
 
 namespace hexa_package_newsdata\Services;
 
-use hexa_core\Models\Setting;
 use hexa_core\Security\Http\OutboundHttpResponse;
 use hexa_core\Security\Http\SafeOutboundHttpClient;
 use Illuminate\Support\Facades\Log;
@@ -22,7 +21,7 @@ class NewsDataService
 
     private function getApiKey(): ?string
     {
-        return Setting::getValue('newsdata_api_key');
+        return app(\hexa_core\Services\CredentialService::class)->get('newsdata', 'api_key');
     }
 
     /**

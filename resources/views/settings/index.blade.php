@@ -23,7 +23,7 @@
     </div>
 
     {{-- API Key --}}
-    @php $apiKey = \hexa_core\Models\Setting::getValue('newsdata_api_key', ''); @endphp
+    @php $apiKey = app(\hexa_core\Services\CredentialService::class)->getMasked('newsdata', 'api_key'); @endphp
     <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
         <h2 class="text-lg font-semibold text-gray-900 mb-4">API Key</h2>
 

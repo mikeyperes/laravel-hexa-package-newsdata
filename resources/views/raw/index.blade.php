@@ -9,7 +9,7 @@
     {{-- Package Functions Index --}}
     <div class="bg-gray-900 rounded-xl p-6 text-sm font-mono">
         <h2 class="text-white font-semibold mb-3">NewsData Functions</h2>
-        @php $apiKey = \hexa_core\Models\Setting::getValue('newsdata_api_key', ''); @endphp
+        @php $apiKey = app(\hexa_core\Services\CredentialService::class)->getMasked('newsdata', 'api_key'); @endphp
         <div class="flex items-center gap-2 mb-3">
             <span class="w-2 h-2 rounded-full {{ $apiKey ? 'bg-green-400' : 'bg-yellow-400' }}"></span>
             <span class="text-sm {{ $apiKey ? 'text-green-400' : 'text-yellow-400' }}">{{ $apiKey ? 'API Key Configured' : 'No API Key' }}</span>

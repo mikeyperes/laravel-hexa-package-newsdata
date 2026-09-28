@@ -24,8 +24,13 @@ final class NewsDataServiceTransportTest extends TestCase
             $table->id();
             $table->string('key');
             $table->text('value')->nullable();
+            $table->string('group')->nullable();
+            $table->string('type')->nullable();
+            $table->string('label')->nullable();
+            $table->integer('sort_order')->default(0);
+            $table->timestamps();
         });
-        DB::table('settings')->insert(['key' => 'newsdata_api_key', 'value' => 'fixture-secret']);
+        app(\hexa_core\Services\CredentialService::class)->store('newsdata', 'api_key', 'fixture-secret');
     }
 
     public function test_probe_is_pinned_bounded_and_preserves_its_public_contract(): void

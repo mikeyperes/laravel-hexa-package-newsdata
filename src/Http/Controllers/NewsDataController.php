@@ -5,7 +5,6 @@ namespace hexa_package_newsdata\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use hexa_package_newsdata\Services\NewsDataService;
-use hexa_core\Models\Setting;
 
 /**
  * NewsDataController — handles settings, raw view, and API test endpoints.
@@ -30,7 +29,7 @@ class NewsDataController extends Controller
     public function settings()
     {
         return view('newsdata::settings.index', [
-            'apiKey' => Setting::getValue('newsdata_api_key', ''),
+            'apiKey' => app(\hexa_core\Services\CredentialService::class)->getMasked('newsdata', 'api_key'),
         ]);
     }
 
@@ -44,7 +43,7 @@ class NewsDataController extends Controller
     {
         $request->validate(['api_key' => 'required|string']);
 
-        Setting::setValue('newsdata_api_key', $request->input('api_key'));
+        app(\hexa_core\Services\CredentialService::class)->store('newsdata', 'api_key', (string) $request->input('api_key'));
 
         return response()->json([
             'success' => true,
