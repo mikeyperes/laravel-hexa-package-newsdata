@@ -1,6 +1,6 @@
 <?php
 return [
-    'version' => '2.0.7',
+    'version' => '2.0.8',
 
     /*
     |--------------------------------------------------------------------------
@@ -29,5 +29,17 @@ return [
     */
 
     'max_page_size' => env('NEWSDATA_MAX_PAGE_SIZE', 10),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Maximum query length
+    |--------------------------------------------------------------------------
+    |
+    | Longest `q` the account plan accepts. NewsData rejects a longer query
+    | with HTTP 422; the service keeps whole words up to this length.
+    |
+    */
+
+    'max_query_length' => env('NEWSDATA_MAX_QUERY_LENGTH', 100),
 
 ];

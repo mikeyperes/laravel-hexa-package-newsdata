@@ -86,7 +86,7 @@ class NewsDataService
         try {
             $params = [
                 'apikey' => $key,
-                'q' => $query,
+                'q' => $this->clampQuery($query),
                 'language' => $language,
                 // The account plan caps page size and rejects anything larger
                 // with HTTP 422, so clamp rather than fail the whole query.
@@ -133,5 +133,24 @@ class NewsDataService
 
             return ['success' => false, 'message' => 'NewsData could not be reached securely.', 'data' => null];
         }
+    }
+
+    /**
+     * NewsData rejects a `q` longer than the plan allows (100 characters on
+     * the current plan) with HTTP 422, failing the whole search. Keep whole
+     * words up to the limit instead (NEWSDATA-BUG-001).
+     */
+    private function clampQuery(string $query): string
+    {
+        $query = trim((string) preg_replace('/\s+/u', ' ', $query));
+        $limit = max(10, (int) config('newsdata.max_query_length', 100));
+        if (mb_strlen($query) <= $limit) {
+            return $query;
+        }
+        $clamped = mb_substr($query, 0, $limit + 1);
+        $space = mb_strrpos($clamped, ' ');
+        $clamped = $space !== false && $space > 0 ? mb_substr($clamped, 0, $space) : mb_substr($clamped, 0, $limit);
+
+        return rtrim($clamped, " ,;:-");
     }
 }
